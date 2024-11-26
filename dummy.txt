@@ -1,0 +1,19 @@
+if (gender) {
+        try {
+            const partner = await User.findOne({ telegramId: { $ne: chat_id },'preferences.gender' : gender, isOnline: true});
+            return partner;
+            
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
+        
+    } else{
+        try {
+            const partner = await User.findOne({ telegramId: { $ne: chat_id }, isOnline: true });
+            return partner;
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
+    }
