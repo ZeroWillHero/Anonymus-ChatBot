@@ -5,7 +5,6 @@ const createMatch = async (user1, user2) => {
     try {
         // Check if either user is already in an active match
         const existingMatch = await Match.findOne({
-            isActive: true,
             $or: [
                 { user1: user1.telegramId },
                 { user2: user1.telegramId },
