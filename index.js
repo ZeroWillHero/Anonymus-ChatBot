@@ -77,10 +77,24 @@ bot.on('message', async (msg) => {
 
         if (message.photo) {
             await bot.sendPhoto(recipientId, message.photo[0].file_id, { caption: message.caption || '' });
-        } else if (message.text) {
-            await bot.sendMessage(recipientId, message.text);
+        } else if (message.sticker) {
+            await bot.sendSticker(recipientId, message.sticker.file_id);
+        } else if (message.document) {
+            await bot.sendDocument(recipientId, message.document.file_id, { caption: message.caption || '' });
+        } else if (message.video) {
+            await bot.sendVideo(recipientId, message.video.file_id, { caption: message.caption || '' });
+        } else if (message.audio) {
+            await bot.sendAudio(recipientId, message.audio.file_id, { caption: message.caption || '' });
+        } else if (message.voice) {
+            await bot.sendVoice(recipientId, message.voice.file_id, { caption: message.caption || '' });
+        } else if (message.animation) {
+            await bot.sendAnimation(recipientId, message.animation.file_id, { caption: message.caption || '' });
+        } else if (message.location) {
+            await bot.sendLocation(recipientId, message.location.latitude, message.location.longitude);
+        } else if (message.contact) {
+            await bot.sendContact(recipientId, message.contact.phone_number, message.contact.first_name, { last_name: message.contact.last_name || '' });
         } else {
-            bot.sendMessage(telegram_id, 'Unsupported message type.');
+            await bot.sendMessage(recipientId, message.text);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -89,6 +103,18 @@ bot.on('message', async (msg) => {
 });
 
 // /next
+
+
+// /stop
+
+
+// /settings 
+
+// /vip
+
+// /pay
+
+// 
 
 // app listen 
 app.listen(port, () => {
