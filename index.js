@@ -151,7 +151,9 @@ bot.onText(/\/next/, async (msg) => {
     } else {
         bot.sendMessage(msg.chat.id, 'No active match found please /start to match with a new partner');
     }
-
+    // update recipient as not in match and not online 
+    const recipientUpdate = await updateUser(recipientId, { is_online: false, is_matched: false });
+    console.log(recipientUpdate);
     // // search for active match 
     // const activeMatch = await Match.findOne({
     //     $or: [{ user1: msg.chat.id }, { user2: msg.chat.id }],
