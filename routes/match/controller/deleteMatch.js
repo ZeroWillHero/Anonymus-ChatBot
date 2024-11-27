@@ -1,11 +1,14 @@
 const Match = require('./../../../models/Match');
 
-const deleteMatch = (match_id) => {
+const deleteMatch = async (telegram_id) => {
     try {
-        const match = Match.deleteOne({ _id: match_id });
-        if (match) {
-            console.log("Match deleted");
+        const match = await Match.findOne({
+            $or: [{ user1: telegram_id }, { user2: telegram_id }]
+        });
 
+        if (match) {
+            await match.deleteOne({ _id: match._id });
+            console.log("Match deleted");
         }
         return match;
     } catch (error) {

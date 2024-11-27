@@ -11,11 +11,17 @@ const updateUser = require('./routes/user/controller/updateUser');
 const matchUsers = require('./Chat/botFunctions').matchUsers;
 const createMatch = require('./routes/match/controller/createMatch');
 const deleteMatch = require('./routes/match/controller/deleteMatch');
-const sendMessages = require('./Chat/botFunctions').sendMessages;
+const updateMatch = require('./routes/match/controller/updateMatch');
+const submitReview = require('./Chat/botFunctions').submitReview;
 // const sendMessageToPartner = require('./Chat/botFunctions').sendMessageToPartner;
 
 const bot = require('./Chat/chatBot');
+const getMatch = require('./routes/match/controller/getMatch');
 const bot_url = process.env.BOT_URL;
+
+// import components 
+const reportingComp = require('./components/reporting');
+
 
 app.use(express.json());
 app.use(cors());
@@ -23,25 +29,59 @@ app.use(cors());
 const port = process.env.PORT || 3000;
 require('./database/databse');
 
+// GLOBAL VARIABLES 
+let is_searching = false;
+
+
 // start/
 bot.onText(/\/start/, async (msg) => {
+    is_searching = true
     const chatId = msg.chat.id;
     await createUser(chatId);
-    const matchedUsers = await matchUsers(chatId);
+
+    // update is_online true
+    const user = await updateUser(chatId, { is_online: true });
+    console.log(user);
+
+    const matchedUsers = await matchUsers(msg.chat.id);
     if (matchedUsers) {
+
+        await createMatch(matchedUsers.user1, matchedUsers.user2);
+        // send to the chat id of partner 
+        console.log(matchedUsers.user1.telegramId, matchedUsers.user2.telegramId);
+        bot.sendMessage(matchedUsers.user1.telegramId, `Partner found 😺
+
+            /next — find a new partner
+            /stop — stop this dialog
+            
+            https://t.me/Anonymus_Messaging_bot`);
+
+        bot.sendMessage(matchedUsers.user2.telegramId, `Partner found 😺
+
+                /next — find a new partner
+                /stop — stop this dialog
+                
+                https://t.me/Anonymus_Messaging_bot`);
+    }
+});
+
+// search 
+bot.onText(/\/search/, async (msg) => {
+    const matchedUsers = await matchUsers(msg.chat.id);
+    if (matchedUsers) {
+
         await createMatch(matchedUsers.user1, matchedUsers.user2);
         // send to the chat id of partner 
         console.log(matchedUsers.user1.telegramId, matchedUsers.user2.telegramId);
 
-        bot.sendMessage(matchedUsers.user1.telegramId, 'You have been matched! Say hi to your new partner.');
-        bot.sendMessage(matchedUsers.user2.telegramId, 'You have been matched! Say hi to your new partner.');
-
+        // bot.sendMessage(matchedUsers.user1.telegramId, 'You have been matched! Say hi to your new partner.');
+        // bot.sendMessage(matchedUsers.user2.telegramId, 'You have been matched! Say hi to your new partner.');
     }
+
 
 });
 
-let recipientId;
-
+// lookin for messages
 bot.on('message', async (msg) => {
     let telegram_id = msg.chat.id;
     let message = msg;
@@ -49,8 +89,6 @@ bot.on('message', async (msg) => {
     if (msg.text && msg.text.startsWith('/')) {
         return;
     }
-
-    console.log("User Telegram ID:", telegram_id);
 
     try {
         const activeMatch = await Match.findOne({
@@ -62,18 +100,16 @@ bot.on('message', async (msg) => {
 
         if (!activeMatch) {
             console.log('No active match found for:', telegram_id);
-            return bot.sendMessage(telegram_id, 'No active match found');
+            return bot.sendMessage(telegram_id, 'type /search to find a partner');
         }
 
         recipientId = parseInt(telegram_id) !== parseInt(activeMatch.user1) ? parseInt(activeMatch.user1) : parseInt(activeMatch.user2);
-        console.log(typeof(recipientId))
         // recipientId = parseInt(recipientId);
 
         if (recipientId === telegram_id) {
             return bot.sendMessage(telegram_id, 'Error: Cannot forward messages to yourself');
         }
 
-        console.log('Recipient ID:', recipientId);
 
         if (message.photo) {
             await bot.sendPhoto(recipientId, message.photo[0].file_id, { caption: message.caption || '' });
@@ -103,10 +139,90 @@ bot.on('message', async (msg) => {
 });
 
 // /next
+bot.onText(/\/next/, async (msg) => {
+    // store user info for reporting 
+    const deletedMatch = await deleteMatch(String(msg.chat.id));
+    console.log("delete match object ",deletedMatch);
+    const recipientId = String(msg.chat.id) === deletedMatch.user1 ? deletedMatch.user2 : deletedMatch.user1;
+    console.log("Recipient for reporting ",recipientId);
+    if (deletedMatch) {
+        reportingComp(recipientId,msg.chat.id);
+
+    } else {
+        bot.sendMessage(msg.chat.id, 'No active match found please /start to match with a new partner');
+    }
+
+    // // search for active match 
+    // const activeMatch = await Match.findOne({
+    //     $or: [{ user1: msg.chat.id }, { user2: msg.chat.id }],
+
+    // });
+
+    // console.log(activeMatch);
+
+    // // store the chat id for submit a review 
+    // const recipientId = activeMatch.user1 == msg.chat.id ? activeMatch.user2 : activeMatch.user1;
+    // // submit review 
+
+
+    // if (activeMatch){
+    //     const updatedMatch = await updateMatch(activeMatch._id);
+    //     console.log(updatedMatch);
+    // }
+
+    bot.sendMessage(msg.chat.id, 'looking for partner');
+    // start new chat session 
+    const matchedUsers = await matchUsers(msg.chat.id);
+    if (matchedUsers) {
+        await createMatch(matchedUsers.user1, matchedUsers.user2);
+        // send to the chat id of partner 
+        // bot.sendMessage(matchedUsers.user1.telegramId, 'You have been matched! Say hi to your new partner.');
+        // bot.sendMessage(matchedUsers.user2.telegramId, 'You have been matched! Say hi to your new partner.');
+    }
+
+});
 
 
 // /stop
+bot.onText(/\/stop/, async (msg) => {
+    // search current match 
+    try {
+        const currentMatch = await Match.findOne({
+            $or: [{ user1: msg.chat.id }, { user2: msg.chat.id }],
+            status: 'active'
+        });
+        // set users are not in match 
+        const user1Update = await updateUser(currentMatch.user1, { is_online: false });
+        const user2Update = await updateUser(currentMatch.user2, { is_online: false });
 
+        console.log("updated online status for both users");
+
+
+        const recipient = currentMatch.user1 == msg.chat.id ? currentMatch.user2 : currentMatch.user1;
+        bot.sendMessage(recipient, `Your partner has stopped the dialog 😞
+Type /search to find a new partner
+
+https://t.me/chatbot.`);
+
+        bot.sendMessage(msg.chat.id, `_You stopped the dialog_ 🙄
+_Type /search to find a new partner_
+
+https://t.me/chatbot`)
+
+    } catch (error) {
+        console.log(error);
+    }
+
+    // delete the current match 
+    const deletedMatch = await deleteMatch(String(msg.chat.id));
+    // looking for if deleteMatch available 
+    if (deletedMatch) {
+        console.log('Match deleted successfully');
+    } else {
+        bot.sendMessage(msg.chat.id, `No active match found
+             please /start to match with a new partner`);
+    }
+});
 
 // /settings 
 
@@ -114,7 +230,10 @@ bot.on('message', async (msg) => {
 
 // /pay
 
-// 
+// get my id
+bot.onText(/\/myid/, (msg) => {
+    bot.sendMessage(msg.chat.id, `_Your ID:_ ${msg.chat.id}`, { parse_mode: 'Markdown' });
+});
 
 // app listen 
 app.listen(port, () => {
