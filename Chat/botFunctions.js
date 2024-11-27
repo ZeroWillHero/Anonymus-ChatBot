@@ -98,9 +98,6 @@ const matchUsers = async (chat_id) => {
 
 };
 
-const submitReview = (recipientId) => {
-
-}
 
 
 module.exports = {
