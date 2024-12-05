@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema({
     telegramId: { type: String, required: true, unique: true },
     username: { type: String },
     language: { type: String, default: 'en' },
-    isOnline : {type: Boolean,default:true},
+    is_online : {type: Boolean,default:false},
     preferences: {
         gender: { type: String ,default: 'all' },
     },
@@ -26,13 +26,13 @@ const userSchema = new mongoose.Schema({
         amount : {
             type : Number,
             default : 0
-        },
-        
-        is_matched : {
-            type : Boolean,
-            default : false
         }
     },
+
+    is_matched : {
+        type : Boolean,
+        default : false
+    }
 }, {
     timestamps : true
 });

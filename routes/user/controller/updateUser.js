@@ -18,8 +18,7 @@ const updateUser = async (telegramId, updates) => {
     }catch(error){
         console.log("error : " , error);
     }
-
-    
+ 
 }
 
 module.exports = updateUser;
