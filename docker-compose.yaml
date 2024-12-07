@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    container_name: express_chatbot
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/chatbotdb
+    restart: always
+  
+  mongo:
+    image: mongo:6
+    container_name: chatbot_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+volumes:
+  mongo_data:
