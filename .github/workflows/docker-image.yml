@@ -43,11 +43,17 @@ jobs:
 
         EOF
 
+
+    - name: Clone Git Repository 
+      run: | 
+            git clone https://github.com/ZeroWillHero/Anonymus-ChatBot.git
+            cd Anonymus-ChatBot
+
     - name: Deploy application
       run: |
         PUBLIC_DNS=${{ steps.dns.outputs.public_dns }}
         ssh -o StrictHostKeyChecking=no -i chatbot.pem ubuntu@$PUBLIC_DNS << 'EOF'
-          cd Anonymus-ChatBot
+          
           docker-compose pull
           docker-compose up -d
         EOF
