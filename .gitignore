@@ -3,3 +3,11 @@ node_modules
 
 image.png
 chatbot.pem
+
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+terraform.lock.hcl
+
+.vscode/
+.idea/
