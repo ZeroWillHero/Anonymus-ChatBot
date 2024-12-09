@@ -1,4 +1,4 @@
-name: Build and Push Docker image
+name: Deploy to AWS EC2
 
 on:
   push:
@@ -6,23 +6,56 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1
 
-      - name: Build Docker image
-        run: |
-          docker compose build
+    - name: Launch EC2 instance
+      id: ec2
+      run: |
+        INSTANCE_ID=$(aws ec2 run-instances --image-id ami-0c55b159cbfafe1f0 --count 1 --instance-type t2.micro --key-name MyKeyPair --query 'Instances[0].InstanceId' --output text)
+        echo "::set-output name=instance_id::$INSTANCE_ID"
 
-      - name: Push Docker image
-        run: |
-          docker compose push
+    - name: Wait for EC2 instance to be running
+      run: |
+        INSTANCE_ID=${{ steps.ec2.outputs.instance_id }}
+        aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+
+    - name: Get EC2 instance public DNS
+      id: dns
+      run: |
+        INSTANCE_ID=${{ steps.ec2.outputs.instance_id }}
+        PUBLIC_DNS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicDnsName' --output text)
+        echo "::set-output name=public_dns::$PUBLIC_DNS"
+
+    - name: Install Docker and MongoDB on EC2
+      run: |
+        PUBLIC_DNS=${{ steps.dns.outputs.public_dns }}
+        ssh -o StrictHostKeyChecking=no -i MyKeyPair.pem ubuntu@$PUBLIC_DNS << 'EOF'
+          sudo apt-get update -y
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo usermod -aG docker ubuntu
+          sudo apt-get install -y mongodb
+          sudo systemctl start mongodb
+          sudo systemctl enable mongodb
+        EOF
+
+    - name: Clone repository and deploy with Docker Compose
+      run: |
+        PUBLIC_DNS=${{ steps.dns.outputs.public_dns }}
+        ssh -o StrictHostKeyChecking=no -i MyKeyPair.pem ubuntu@$PUBLIC_DNS << 'EOF'
+          git clone https://github.com/yourusername/yourrepository.git
+          cd yourrepository
+          sudo docker-compose up -d
+        EOF
