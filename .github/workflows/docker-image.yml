@@ -54,6 +54,6 @@ jobs:
         PUBLIC_DNS=${{ steps.dns.outputs.public_dns }}
         ssh -o StrictHostKeyChecking=no -i chatbot.pem ubuntu@$PUBLIC_DNS << 'EOF'
           
-          docker compose pull
+          docker compose build
           docker compose up -d
         EOF
