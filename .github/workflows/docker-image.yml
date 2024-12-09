@@ -20,21 +20,10 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-south-1
 
-    - name: Launch EC2 instance
-      id: ec2
-      run: |
-        INSTANCE_ID=$(aws ec2 run-instances --image-id ami-09b0a86a2c84101e1 --count 1 --instance-type t2.micro --key-name chatbot --query 'Instances[0].InstanceId' --output text)
-        echo "::set-output name=instance_id::$INSTANCE_ID"
-
-    - name: Wait for EC2 instance to be running
-      run: |
-        INSTANCE_ID=${{ steps.ec2.outputs.instance_id }}
-        aws ec2 wait instance-running --instance-ids $INSTANCE_ID
-
     - name: Get EC2 instance public DNS
       id: dns
       run: |
-        INSTANCE_ID=${{ steps.ec2.outputs.instance_id }}
+        INSTANCE_ID=<your-existing-instance-id>
         PUBLIC_DNS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicDnsName' --output text)
         echo "::set-output name=public_dns::$PUBLIC_DNS"
 
@@ -54,8 +43,8 @@ jobs:
     - name: Clone repository and deploy with Docker Compose
       run: |
         PUBLIC_DNS=${{ steps.dns.outputs.public_dns }}
-        ssh -o StrictHostKeyChecking=no -i MyKeyPair.pem ubuntu@$PUBLIC_DNS << 'EOF'
-          git clone https://github.com/yourusername/yourrepository.git
-          cd yourrepository
+        ssh -o StrictHostKeyChecking=no -i chatbot.pem ubuntu@$PUBLIC_DNS << 'EOF'
+          git clone https://github.com/ZeroWillHero/Anonymus-ChatBot.git
+          cd Anonymus-ChatBot
           sudo docker-compose up -d
         EOF
