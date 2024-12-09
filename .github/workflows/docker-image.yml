@@ -27,6 +27,11 @@ jobs:
         PUBLIC_DNS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicDnsName' --output text)
         echo "::set-output name=public_dns::$PUBLIC_DNS"
 
+    - name: Add SSH key
+      run: |
+        echo "${{ secrets.CHATBOT_PEM }}" > chatbot.pem
+        chmod 600 chatbot.pem
+
     - name: Install Docker and MongoDB on EC2
       run: |
         PUBLIC_DNS=${{ steps.dns.outputs.public_dns }}
@@ -40,11 +45,11 @@ jobs:
           sudo systemctl enable mongodb
         EOF
 
-    - name: Clone repository and deploy with Docker Compose
+    - name: Deploy application
       run: |
         PUBLIC_DNS=${{ steps.dns.outputs.public_dns }}
         ssh -o StrictHostKeyChecking=no -i chatbot.pem ubuntu@$PUBLIC_DNS << 'EOF'
-          git clone https://github.com/ZeroWillHero/Anonymus-ChatBot.git
-          cd Anonymus-ChatBot
-          sudo docker-compose up -d
+          cd /path/to/your/docker-compose-directory
+          docker-compose pull
+          docker-compose up -d
         EOF
