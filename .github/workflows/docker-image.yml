@@ -23,7 +23,7 @@ jobs:
     - name: Get EC2 instance public DNS
       id: dns
       run: |
-        INSTANCE_ID=<your-existing-instance-id>
+        INSTANCE_ID=i-09d02807eeff6252b
         PUBLIC_DNS=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicDnsName' --output text)
         echo "::set-output name=public_dns::$PUBLIC_DNS"
 
