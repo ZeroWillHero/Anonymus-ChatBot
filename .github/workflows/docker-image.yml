@@ -47,7 +47,7 @@ jobs:
       run: |
         PUBLIC_DNS=${{ steps.dns.outputs.public_dns }}
         ssh -o StrictHostKeyChecking=no -i chatbot.pem ubuntu@$PUBLIC_DNS << 'EOF'
-          cd /path/to/your/docker-compose-directory
+          cd Anonymus-ChatBot
           docker-compose pull
           docker-compose up -d
         EOF
