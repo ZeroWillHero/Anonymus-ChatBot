@@ -21,10 +21,5 @@ jobs:
 
     - name: Tag and push app image
       run: |
-        docker tag express_chatbot:latest ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
+        docker tag nonymus-chatbot-app ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
-
-    - name: Tag and push mongo image
-      run: |
-        docker tag chatbot_mongo:latest ${{ secrets.DOCKER_USERNAME }}/chatbot_mongo:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/chatbot_mongo:latest
