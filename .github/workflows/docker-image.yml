@@ -1,5 +1,3 @@
-name: Build and Push Docker Compose
-
 on:
   push:
     branches:
@@ -24,11 +22,12 @@ jobs:
 
     - name: Build and push app image
       run: |
-        docker compose -f docker-compose.yaml build
+        docker compose -f docker-compose.yaml build app
         docker tag express_chatbot:latest ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
 
     - name: Build and push mongo image
       run: |
-        docker tag mongo:6 ${{ secrets.DOCKER_USERNAME }}/chatbot_mongo:latest
+        docker compose -f docker-compose.yaml build mongo
+        docker tag chatbot_mongo:latest ${{ secrets.DOCKER_USERNAME }}/chatbot_mongo:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/chatbot_mongo:latest
