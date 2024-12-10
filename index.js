@@ -142,18 +142,17 @@ bot.on('message', async (msg) => {
 bot.onText(/\/next/, async (msg) => {
     // store user info for reporting 
     const deletedMatch = await deleteMatch(String(msg.chat.id));
-    console.log("delete match object ",deletedMatch);
-    const recipientId = String(msg.chat.id) === deletedMatch.user1 ? deletedMatch.user2 : deletedMatch.user1;
-    console.log("Recipient for reporting ",recipientId);
+    console.log("delete match object ", deletedMatch);
     if (deletedMatch) {
-        reportingComp(recipientId,msg.chat.id);
-
+        reportingComp(recipientId, msg.chat.id);
+        const recipientId = String(msg.chat.id) === deletedMatch.user1 ? deletedMatch.user2 : deletedMatch.user1;
+        // update recipient as not in match and not online 
+        const recipientUpdate = await updateUser(recipientId, { is_online: false, is_matched: false });
     } else {
         bot.sendMessage(msg.chat.id, 'No active match found please /start to match with a new partner');
     }
-    // update recipient as not in match and not online 
-    const recipientUpdate = await updateUser(recipientId, { is_online: false, is_matched: false });
-    console.log(recipientUpdate);
+
+
     // // search for active match 
     // const activeMatch = await Match.findOne({
     //     $or: [{ user1: msg.chat.id }, { user2: msg.chat.id }],
