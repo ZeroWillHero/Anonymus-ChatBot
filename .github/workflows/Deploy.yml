@@ -37,5 +37,4 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest     
           docker compose up -d
           echo "Docker container started successfully"   
-        EOF
 
