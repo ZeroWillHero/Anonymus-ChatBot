@@ -24,7 +24,7 @@ jobs:
 
     - name: Build and push app image
       run: |
-        docker-compose -f docker-compose.yaml build
+        docker compose -f docker-compose.yaml build
         docker tag express_chatbot:latest ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
 
