@@ -1,8 +1,27 @@
-name: Deploy into EC2 instance 
+
+name: EC2 SSH Login
 
 on:
-    push:
-        branches: [ "main" ]
+  push:
+    branches:
+      - main
 
+jobs:
+  ssh-login:
+    runs-on: ubuntu-latest
 
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH Key
+      run: |
+        echo "${{ secrets.CHATBOT_PEM }}" > ec2_key.pem
+        chmod 600 ec2_key.pem
+
+    - name: Log into EC2 instance
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+      run: |
+        ssh -i ec2_key.pem -o StrictHostKeyChecking=no ubuntu@${EC2_HOST} "echo 'Successfully logged into EC2'"
 
