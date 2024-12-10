@@ -21,15 +21,13 @@ jobs:
     - name: Build the Docker image
       run: docker compose build
 
-    - name: Tag and push app image
+    - name: Tag and push image
       run: |
-        docker tag express_chatbot:latest ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
+        IMAGE_ID=$(docker images -q express_chatbot:latest)
+        docker tag $IMAGE_ID ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/express_chatbot:latest
 
-    - name: Tag and push mongo image
-      run: |
-        docker tag chatbot_mongo:latest ${{ secrets.DOCKER_USERNAME }}/chatbot_mongo:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/chatbot_mongo:latest
+    
 
     
 
