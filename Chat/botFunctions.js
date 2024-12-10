@@ -15,7 +15,7 @@ const matchUsers = async (chat_id) => {
 
     console.log(user1);
 
-    if (user1.subscription.type === 'premium') {
+    if (user1.subscription.type === 'premium' && user1.subscription.type !== null) {
         bot.sendMessage(chat_id,
             'Please select the gender you want to search for:', {
             reply_markup: {
