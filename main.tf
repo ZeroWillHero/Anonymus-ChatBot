@@ -47,20 +47,6 @@ resource "aws_instance" "app_server" {
   key_name               = "chatbot" # Add your key pair name here
   vpc_security_group_ids = [aws_security_group.app_sg.id]
 
-  // user Script for install necessary packages
-  // install docker 
-
-  user_data = <<-EOF
-  #!/bin/bash
-  sudo apt update
-  sudo apt install snapd
-
-  # install docker
-  sudo snap install docker -y
-
-
-  
-EOF
 
   tags = {
     Name = "TelegranAppInstance"
