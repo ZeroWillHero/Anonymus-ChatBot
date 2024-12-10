@@ -1,0 +1,8 @@
+name: Deploy into EC2 instance 
+
+on:
+    push:
+        branches: [ "main" ]
+
+
+
