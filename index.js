@@ -90,6 +90,9 @@ bot.on('message', async (msg) => {
         return;
     }
 
+    
+
+
     try {
         const activeMatch = await Match.findOne({
             $or: [{ user1: telegram_id }, { user2: telegram_id }],
@@ -141,15 +144,19 @@ bot.on('message', async (msg) => {
 // /next
 bot.onText(/\/next/, async (msg) => {
     // store user info for reporting 
-    const deletedMatch = await deleteMatch(String(msg.chat.id));
-    console.log("delete match object ", deletedMatch);
-    if (deletedMatch) {
-        reportingComp(recipientId, msg.chat.id);
-        const recipientId = String(msg.chat.id) === deletedMatch.user1 ? deletedMatch.user2 : deletedMatch.user1;
-        // update recipient as not in match and not online 
-        const recipientUpdate = await updateUser(recipientId, { is_online: false, is_matched: false });
-    } else {
-        bot.sendMessage(msg.chat.id, 'No active match found please /start to match with a new partner');
+    try {
+        const deletedMatch = await deleteMatch(String(msg.chat.id));
+        // console.log("delete match object ", deletedMatch);
+        if (deletedMatch) {
+            reportingComp(recipientId, msg.chat.id);
+            const recipientId = String(msg.chat.id) === deletedMatch.user1 ? deletedMatch.user2 : deletedMatch.user1;
+            // update recipient as not in match and not online 
+            const recipientUpdate = await updateUser(recipientId, { is_online: false, is_matched: false });
+        } else {
+            bot.sendMessage(msg.chat.id, 'No active match found please /start to match with a new partner');
+        }
+    } catch (error) {
+        console.log(error);
     }
 
 
@@ -193,8 +200,8 @@ bot.onText(/\/stop/, async (msg) => {
             status: 'active'
         });
         // set users are not in match 
-        const user1Update = await updateUser(currentMatch.user1, { is_online: false });
-        const user2Update = await updateUser(currentMatch.user2, { is_online: false });
+        if (currentMatch.user1) {await updateUser(currentMatch.user1, { is_online: false })}
+        if (currentMatch.user2) {await updateUser(currentMatch.user2, { is_online: false })}
 
         console.log("updated online status for both users");
 
@@ -234,6 +241,7 @@ https://t.me/chatbot`)
 // get my id
 bot.onText(/\/myid/, (msg) => {
     bot.sendMessage(msg.chat.id, `_Your ID:_ ${msg.chat.id}`, { parse_mode: 'Markdown' });
+    
 });
 
 // app listen 
